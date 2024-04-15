@@ -1,5 +1,6 @@
 "
-" My vimrc by bsdero@gmail.com
+" My vimrc by bsdero@gmail.com. 
+" I tool almost all from https://github.com/amix/vimrc
 "
 "
 " Sections:
