@@ -1,9 +1,10 @@
 "
 " My vimrc by bsdero@gmail.com. 
-" I tool almost all from https://github.com/amix/vimrc
-"
+" I took most of the file from https://github.com/amix/vimrc
+" and then applied my own customizations
 "
 " Sections:
+"    -> Help commands -nothing is configured here
 "    -> General
 "    -> VIM user interface
 "    -> Colors and Fonts
@@ -19,6 +20,104 @@
 "    -> Helper functions
 "
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" => Help commands
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" MOVE CURSOR: Go to Normal mode with esc key and: 
+" gg                 -Move cursor to beginning of file
+" G                  -Move cursor to EOF
+" [lineNO]G          -Move cursor to lineNo
+"
+"
+" RUN COMMAND
+" :! command         -Run command
+" 
+"
+" SELECT, COPY, CUT, PASTE OPERATION.
+" Go to normal mode with Esc key, then:
+" v                  -Start selection, start visual char mode
+" V                  -Start selection, start visual line mode
+" ggVG               -Select all the file
+" y                  -copy selection
+" d                  -Cut selection
+" move cursor and p  -Paste selection
+"
+"
+" MULTIPLE WINDOW COMMANDS
+" :split code.c      -split screen in two windows, one on top the other
+" :vsplit code.c     -split screen in two windows, one on the side the other
+" :<C-w> H           -Move window to the left
+" :<C-w> J           -Move window to the bottom
+" :<C-w> K           -Move window to the bottom
+" :<C-w> L           -Move window to the right
+" :<C-w> arrows      -Move cursor to other window
+" :<C-w> R           -Rotate windows up/left
+" :<C-w> r           -Rotate windows down/right
+" :res 60            -Resize windows heigth to 60 lines
+" :res +5            -Increase in 5 lines
+" :res -5            -Decrease in 5 lines
+" :<C-w> +           -Increate by 1
+" :<C-w> -           -Decrease by 1
+" :ls                -List all opened windows
+" :b [0..N]          -Go to window with buffer N
+" :sbN               -Split from buffer N
+" :vertical sbN      -Vertical split from buffer N
+"
+"
+" TABS
+" :tabe code.c       -Open a new tab with a file code.c
+" :tabc              -Close current tab
+" :tabo              -Close all tabs except current
+" :tabs              -List all tabs
+" :tabn              -Go Next tab
+" :tabp              -Go prev tab
+"
+"
+" SAVE AND EXIT COMMANDS
+" :wa                -Save all, no exit
+" :xa                -Save all, exit
+" :wqa               -Same than :xa
+" :qa                -Exit if no updates
+" :qa!               -Exit, no matter what
+"
+"
+" RECTANGULAR SELECTIONS
+" :set virtualedit+=all    -Enable virtual edition
+" <C-V>                    -Set rectangular selection
+" o                        -Switch corners
+" gv                       -Restore selection
+"
+" 
+" COMMANDS FROM CLI
+" wincmd j         -Down
+" wincmd k         -Up
+" wincmd h         -left
+" wincmd l         -right
+"
+"
+" LAYOUTS
+" ,---.
+" |1|2|
+" `---'
+" vim -O f1 f2                           
+" vim f1 -c 'vsplit f2' -c 'wincmd r'
+"
+"
+" ,-.
+" |1|
+" |-|
+" |2|
+" `-'
+" vim -o f1 f2                           
+" vim f1 -c 'split f2' -c 'wincmd r'
+"
+"
+" ,-----.
+" |1|2|3|
+" `-----'
+" vim -O f1 f2 f3                          
+"
 
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -68,9 +167,10 @@ endif
 call plug#begin()
 Plug 'gyim/vim-boxdraw' "box draw plugin 
 Plug 'itchyny/lightline.vim'     "text bar at bottom plugin
-Plug 'NLKNguyen/papercolor-theme' "PaperColor scheme
 Plug 'wesQ3/vim-windowswap'       "Window swap without move the layout
 Plug 'skywind3000/vim-quickui'    "Menus
+Plug 'preservim/nerdtree'         "NerdTree for files
+
 " Color schemes
 Plug 'NLKNguyen/papercolor-theme' "PaperColor
 Plug 'sainnhe/everforest'         "everforest
@@ -414,5 +514,22 @@ function! VisualSelection(direction, extra_filter) range
     let @" = l:saved_reg
 endfunction
 
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" => NERDTree key maps
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+noremap <leader>n :NERDTree<CR>
+noremap <leader>nh :help NERDTree<CR>
 
+noremap <leader>be :set virtualedit+=all<cr>
+noremap <leader>bd :set virtualedit=<cr>
+" For box or line drawing first enable the virtualedit mode, and select a 
+" rectangular area with Ctrl-V. Then issue the next commands:
+" +o: draw rectangle
+" +O: draw rectangle with caption
+" o: switch corners in selection
+" +- : draw lines
+" +> : draw arrows
+" ++>: draw arrows in both ends
+"
+"
 
