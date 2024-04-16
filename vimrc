@@ -520,6 +520,10 @@ endfunction
 noremap <leader>n :NERDTree<CR>
 noremap <leader>nh :help NERDTree<CR>
 
+
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" => Drawbox key maps
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 noremap <leader>be :set virtualedit+=all<cr>
 noremap <leader>bd :set virtualedit=<cr>
 " For box or line drawing first enable the virtualedit mode, and select a 
@@ -532,4 +536,52 @@ noremap <leader>bd :set virtualedit=<cr>
 " ++>: draw arrows in both ends
 "
 "
+
+
+" clear all the menus
+call quickui#menu#reset()
+
+" install a 'File' menu, use [text, command] to represent an item.
+call quickui#menu#install('&File', [
+            \ [ "&New File\tCtrl+n", 'tabe `=tempname()`', 'Edit a new file' ],
+            \ [ "&Open File\t(F3)", 'NERDTree', 'Open a file' ],
+            \ [ "&Close", 'close' ],
+            \ [ "--", '' ],
+            \ [ "&Save\tCtrl+s", 'w'],
+            \ [ "Save &As", 'call feedky(":saveas ")' ],
+            \ [ "Save All", 'wa' ],
+            \ [ "--", '' ],
+            \ [ "Save All and Exit", 'xa' ],
+            \ [ "E&xit\tAlt+x", 'q' ],
+            \ ])
+
+" items containing tips, tips will display in the cmdline
+call quickui#menu#install('&Edit', [
+            \ [ 'Start select', 'v' ],
+            \ [ '&Copy', 'y', 'help 1' ],
+            \ [ '&Paste', 'p', 'help 2' ],
+            \ ])
+
+" script inside %{...} will be evaluated and expanded in the string
+call quickui#menu#install("&Option", [
+			\ ['Set &Spell %{&spell? "Off":"On"}', 'set spell!'],
+			\ ['Set &Cursor Line %{&cursorline? "Off":"On"}', 'set cursorline!'],
+			\ ['Set &Paste %{&paste? "Off":"On"}', 'set paste!'],
+			\ ])
+
+" register HELP menu with weight 10000
+call quickui#menu#install('H&elp', [
+			\ ["&Cheatsheet", 'help index', ''],
+			\ ['T&ips', 'help tips', ''],
+			\ ['--',''],
+			\ ["&Tutorial", 'help tutor', ''],
+			\ ['&Quick Reference', 'help quickref', ''],
+			\ ['&Summary', 'help summary', ''],
+			\ ], 10000)
+
+" enable to display tips in the cmdline
+let g:quickui_show_tip = 1
+
+" hit space twice to open menu
+noremap <leader><space> :call quickui#menu#open()<cr>
 
