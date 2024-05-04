@@ -178,6 +178,28 @@ Plug 'Rigellute/rigel'            "rigel
 Plug 'yuttie/hydrangea-vim'       "hydrangea
 Plug 'raphamorim/lucario'         "lucario 
 Plug 'nordtheme/vim'              "nord
+Plug 'nanotech/jellybeans.vim'    "jellybeans
+if has('nvim')
+    " catppuccin
+    " colorscheme catppuccin " catppuccin-latte, catppuccin-frappe, 
+    " catppuccin-macchiato, catppuccin-mocha
+    Plug 'catppuccin/nvim', { 'as': 'catppuccin' } 
+    
+    " colorscheme tokyonight
+    " There are also colorschemes for the different styles.
+    " colorscheme tokyonight-night
+    " colorscheme tokyonight-storm
+    " colorscheme tokyonight-day
+    " colorscheme tokyonight-moon
+    Plug 'folke/tokyonight.nvim'     
+
+    " vim.cmd("colorscheme rose-pine")
+    " vim.cmd("colorscheme rose-pine-main")
+    " vim.cmd("colorscheme rose-pine-moon")
+    " vim.cmd("colorscheme rose-pine-dawn")
+    Plug 'rose-pine/neovim'
+endif
+
 call plug#end()
 " Use the command 'PlugInstall' to setup those plugins
 
@@ -280,19 +302,22 @@ if (empty($TMUX))
   endif
 endif
 
+if has('nvim')
+  try
+    colorscheme tokyonight-night
+  catch
+    colorscheme industry
+  endtry  
+endif
 
-try
-  colorscheme PaperColor
-" Other cool colorschemes    
-" colorscheme industry
-" colorscheme onedark
-" colorscheme solarized
-" autocmd vimenter * ++nested colorscheme gruvbox
-" colorscheme jellybeans
-catch
-  colorscheme industry
-endtry  
-
+if !has('nvim')
+  try
+    colorscheme PaperColor
+  catch
+    colorscheme industry
+  endtry  
+endif
+"
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " => Files, backups and undo
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""

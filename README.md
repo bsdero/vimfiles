@@ -11,6 +11,8 @@ cp -R ~/.vim/autoload/plug.vim ~/.local/share/nvim/site/autoload/
 ```
 
 For install neovim in ubuntu:
-(https://how.wtf/how-to-install-neovim-on-ubuntu.html)[https://how.wtf/how-to-install-neovim-on-ubuntu.html]
+[https://how.wtf/how-to-install-neovim-on-ubuntu.html](https://how.wtf/how-to-install-neovim-on-ubuntu.html)
+
+
 
 
