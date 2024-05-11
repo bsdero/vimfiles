@@ -179,6 +179,8 @@ Plug 'yuttie/hydrangea-vim'       "hydrangea
 Plug 'raphamorim/lucario'         "lucario 
 Plug 'nordtheme/vim'              "nord
 Plug 'nanotech/jellybeans.vim'    "jellybeans
+Plug 'rafi/awesome-vim-colorschemes' "many color schemes:
+
 if has('nvim')
     " catppuccin
     " colorscheme catppuccin " catppuccin-latte, catppuccin-frappe, 
@@ -312,7 +314,8 @@ endif
 
 if !has('nvim')
   try
-    colorscheme PaperColor
+    " colorscheme PaperColor
+    colorscheme nord
   catch
     colorscheme industry
   endtry  
