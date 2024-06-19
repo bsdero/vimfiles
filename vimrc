@@ -573,14 +573,14 @@ call quickui#menu#reset()
 call quickui#menu#install('&File', [
             \ [ "&New File\tCtrl+n", 'tabe `=tempname()`', 'Edit a new file' ],
             \ [ "&Open File\t(F3)", 'NERDTree', 'Open a file' ],
-            \ [ "&Close", 'close' ],
+            \ [ "&Close", 'close', 'q' ],
             \ [ "--", '' ],
             \ [ "&Save\tCtrl+s", 'w'],
             \ [ "Save &As", 'call feedky(":saveas ")' ],
             \ [ "Save All", 'wa' ],
             \ [ "--", '' ],
             \ [ "Save All and Exit", 'xa' ],
-            \ [ "E&xit\tAlt+x", 'q' ],
+            \ [ "E&xit\tAlt+x", 'qa' ],
             \ ])
 
 " items containing tips, tips will display in the cmdline
@@ -595,6 +595,8 @@ call quickui#menu#install("&Option", [
 			\ ['Set &Spell %{&spell? "Off":"On"}', 'set spell!'],
 			\ ['Set &Cursor Line %{&cursorline? "Off":"On"}', 'set cursorline!'],
 			\ ['Set &Paste %{&paste? "Off":"On"}', 'set paste!'],
+            \ ['Edit Configurations', 'tabe ~/.vimrc', 'Edit configuration' ],
+            \ ['Set Mouse %{&paste? "Off":"On"}', 'set mouse!'],
 			\ ])
 
 " register HELP menu with weight 10000
