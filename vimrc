@@ -170,6 +170,7 @@ Plug 'itchyny/lightline.vim'     "text bar at bottom plugin
 Plug 'wesQ3/vim-windowswap'       "Window swap without move the layout
 Plug 'skywind3000/vim-quickui'    "Menus
 Plug 'preservim/nerdtree'         "NerdTree for files
+Plug 'leafOfTree/vim-project'
 
 " Color schemes
 Plug 'NLKNguyen/papercolor-theme' "PaperColor
