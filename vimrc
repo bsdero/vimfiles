@@ -170,7 +170,7 @@ Plug 'itchyny/lightline.vim'     "text bar at bottom plugin
 Plug 'wesQ3/vim-windowswap'       "Window swap without move the layout
 Plug 'skywind3000/vim-quickui'    "Menus
 Plug 'preservim/nerdtree'         "NerdTree for files
-Plug 'leafOfTree/vim-project'
+" Plug 'leafOfTree/vim-project'  "disabled: installed but never configured (no g:vim_project_* settings exist anywhere). Re-enable once configured.
 
 " Color schemes
 Plug 'NLKNguyen/papercolor-theme' "PaperColor
@@ -230,9 +230,6 @@ set cmdheight=2
 " Display the cursor position on the last line of the screen or in the status
 " line of a window
 set ruler
-
-" Always display the status line, even if only one window is displayed
-set laststatus=2
 
 " Instead of failing a command because of unsaved changes, instead raise a
 " dialogue asking if you wish to save changed files.
@@ -325,10 +322,8 @@ endif
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " => Files, backups and undo
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-" Turn backup off, since most stuff is in SVN, git etc. anyway...
-" set nobackup
-" set nowb
-" set noswapfile
+" Backup/swap/undo are left at Vim's built-in defaults; nothing is
+" explicitly configured in this section.
 
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -424,8 +419,16 @@ au BufReadPost * if line("'\"") > 1 && line("'\"") <= line("$") | exe "normal! g
 " Always show the status line
 set laststatus=2
 
-" Format the status line
-set statusline=\ %{HasPaste()}%F%m%r%h\ %w\ \ CWD:\ %r%{getcwd()}%h\ \ \ Line:\ %l\ \ Column:\ %c
+" Configure lightline.vim's active statusline components
+let g:lightline = {
+      \ 'active': {
+      \   'left': [ [ 'mode', 'paste' ],
+      \             [ 'readonly', 'filename', 'modified' ] ],
+      \   'right': [ [ 'lineinfo' ],
+      \              [ 'percent' ],
+      \              [ 'fileformat', 'fileencoding', 'filetype' ] ]
+      \ }
+      \ }
 
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -493,14 +496,6 @@ map <leader>pp :setlocal paste!<cr>
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " => Helper functions
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-" Returns true if paste mode is enabled
-function! HasPaste()
-    if &paste
-        return 'PASTE MODE  '
-    endif
-    return ''
-endfunction
-
 " Don't close window, when deleting a buffer
 command! Bclose call <SID>BufcloseCloseIt()
 function! <SID>BufcloseCloseIt()
@@ -554,7 +549,7 @@ noremap <leader>nh :help NERDTree<CR>
 " => Drawbox key maps
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 noremap <leader>be :set virtualedit+=all<cr>
-noremap <leader>bd :set virtualedit=<cr>
+noremap <leader>bv :set virtualedit=<cr>
 " For box or line drawing first enable the virtualedit mode, and select a 
 " rectangular area with Ctrl-V. Then issue the next commands:
 " +o: draw rectangle
@@ -577,7 +572,7 @@ call quickui#menu#install('&File', [
             \ [ "&Close", 'close', 'q' ],
             \ [ "--", '' ],
             \ [ "&Save\tCtrl+s", 'w'],
-            \ [ "Save &As", 'call feedky(":saveas ")' ],
+            \ [ "Save &As", 'call feedkeys(":saveas ")' ],
             \ [ "Save All", 'wa' ],
             \ [ "--", '' ],
             \ [ "Save All and Exit", 'xa' ],
@@ -596,8 +591,8 @@ call quickui#menu#install("&Option", [
 			\ ['Set &Spell %{&spell? "Off":"On"}', 'set spell!'],
 			\ ['Set &Cursor Line %{&cursorline? "Off":"On"}', 'set cursorline!'],
 			\ ['Set &Paste %{&paste? "Off":"On"}', 'set paste!'],
-            \ ['Edit Configurations', 'tabe ~/.vimrc', 'Edit configuration' ],
-            \ ['Set Mouse %{&paste? "Off":"On"}', 'set mouse!'],
+            \ ['Edit Configurations', 'tabe $MYVIMRC', 'Edit configuration' ],
+            \ ['Set Mouse %{&mouse? "Off":"On"}', 'set mouse!'],
 			\ ])
 
 " register HELP menu with weight 10000
