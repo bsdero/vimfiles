@@ -167,10 +167,23 @@ endif
 call plug#begin()
 Plug 'gyim/vim-boxdraw' "box draw plugin 
 Plug 'itchyny/lightline.vim'     "text bar at bottom plugin
+" Plug 'vim-airline/vim-airline'         " Alternative status bar to lightline.vim above (see the "=> Status line" section for the switch config)
+" Plug 'vim-airline/vim-airline-themes'  " Status bar themes for vim-airline
 Plug 'wesQ3/vim-windowswap'       "Window swap without move the layout
 Plug 'skywind3000/vim-quickui'    "Menus
 Plug 'preservim/nerdtree'         "NerdTree for files
 " Plug 'leafOfTree/vim-project'  "disabled: installed but never configured (no g:vim_project_* settings exist anywhere). Re-enable once configured.
+
+Plug 'xolox/vim-misc'                  " Required dependency for vim-session below
+Plug 'xolox/vim-session'               " Session save/restore (:SaveSession, :OpenSession)
+Plug 'tpope/vim-commentary'            " Comment toggling (gcc toggles a line, gc in visual mode)
+Plug 'dense-analysis/ale'              " Async Lint Engine - syntax/lint hinting
+Plug 'tpope/vim-fugitive'              " Git commands from inside Vim (:Git, :Git blame, :Gdiffsplit, ...)
+Plug 'Xuyuanp/nerdtree-git-plugin'     " Git status flags inside the NERDTree sidebar
+Plug 'tpope/vim-surround'              " Surround/change/delete quote & bracket text objects (cs"', ds", ysiw))
+Plug 'jiangmiao/auto-pairs'            " Auto-close brackets/quotes/parens as you type
+Plug 'Yggdroot/indentLine'             " Visual indent-guide characters (configured in Step 8)
+Plug 'sheerun/vim-polyglot'            " Syntax/indent packs for many languages (notably improves Perl highlighting)
 
 " Color schemes
 Plug 'NLKNguyen/papercolor-theme' "PaperColor
@@ -181,6 +194,11 @@ Plug 'raphamorim/lucario'         "lucario
 Plug 'nordtheme/vim'              "nord
 Plug 'nanotech/jellybeans.vim'    "jellybeans
 Plug 'rafi/awesome-vim-colorschemes' "many color schemes:
+Plug 'morhetz/gruvbox'                 " gruvbox
+Plug 'tomasr/molokai'                  " molokai
+Plug 'dracula/vim', { 'as': 'dracula' } " dracula (aliased: 'dracula/vim' otherwise installs into the same plugged/vim/ directory as nordtheme/vim above)
+Plug 'arcticicestudio/nord-vim'        " nord-vim (a different plugin from nordtheme/vim above - see caution note in the plan)
+Plug 'joshdick/onedark.vim'            " onedark
 
 if has('nvim')
     " catppuccin
@@ -319,6 +337,19 @@ if !has('nvim')
   endtry  
 endif
 "
+
+" Custom Pmenu/PmenuSel colors for the completion popup menu (and the
+" vim-quickui dropdown menus), so they stay legible no matter which
+" colorscheme above is active. Must be reapplied on every ColorScheme
+" event (not just set once) since `:colorscheme` clears all highlights
+" before loading a new scheme - see the Why note in the plan.
+function! ApplyPmenuColors()
+  highlight Pmenu ctermfg=159 ctermbg=18 guifg=#CCECEC guibg=#1A2941
+  highlight PmenuSel ctermfg=17 ctermbg=214 guifg=#121B2B guibg=#FFB300
+endfunction
+autocmd ColorScheme * call ApplyPmenuColors()
+call ApplyPmenuColors()
+
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " => Files, backups and undo
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -346,6 +377,17 @@ set tw=500
 set ai "Auto indent
 set si "Smart indent
 set wrap "Wrap lines
+
+" Per-filetype indent width overrides (settings above are the global
+" fallback; these take precedence for their specific filetypes)
+augroup language_specific
+    autocmd!
+    autocmd FileType python setlocal tabstop=4 softtabstop=4 shiftwidth=4 expandtab
+    autocmd FileType javascript,html,css setlocal tabstop=2 softtabstop=2 shiftwidth=2 expandtab
+    autocmd FileType go setlocal tabstop=8 softtabstop=8 shiftwidth=8 noexpandtab
+    autocmd FileType vim setlocal tabstop=2 softtabstop=2 shiftwidth=2 expandtab
+    autocmd FileType make setlocal tabstop=8 softtabstop=8 shiftwidth=8 noexpandtab
+augroup END
 
 
 """"""""""""""""""""""""""""""
@@ -430,6 +472,26 @@ let g:lightline = {
       \ }
       \ }
 
+" --- Alternative: vim-airline instead of lightline.vim ---
+" lightline.vim (above) is the active status bar. To switch to vim-airline:
+"   1. Comment out the 'Plug itchyny/lightline.vim' line and the g:lightline
+"      block above.
+"   2. Uncomment the two 'Plug vim-airline/...' lines in the Vimplug
+"      configurations section (call plug#begin() block).
+"   3. Uncomment the airline config lines directly below this comment.
+"   4. Run :PlugClean then :PlugInstall, then restart Vim.
+"
+" let g:airline_powerline_fonts = 1
+" let g:airline#extensions#tabline#enabled = 1
+" let g:airline#extensions#tabline#formatter = 'unique_tail_improved'
+" let g:airline_theme = 'tomorrow'
+" if !exists('g:airline_symbols')
+"   let g:airline_symbols = {}
+" endif
+" let g:airline_symbols.linenr = '¶'
+" let g:airline_symbols.paste = 'ρ'
+" let g:airline_symbols.whitespace = 'Ξ'
+
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " => Editing mappings
@@ -480,9 +542,6 @@ map <leader>s? z=
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " => Misc
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-" Remove the Windows ^M - when the encodings gets messed up
-noremap <Leader>m mmHmt:%s/<C-V><cr>//ge<cr>'tzt'm
-
 " Quickly open a buffer for scribble
 map <leader>q :e ~/buffer<cr>
 
@@ -539,10 +598,66 @@ function! VisualSelection(direction, extra_filter) range
 endfunction
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" => ALE configuration (syntax/lint hinting)
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+let g:ale_linters = {
+\   'python': ['flake8', 'pylint'],
+\   'javascript': ['eslint'],
+\   'typescript': ['tslint'],
+\   'go': ['gofmt', 'golint'],
+\   'c': ['clang'],
+\   'cpp': ['clang'],
+\}
+
+let g:ale_fixers = {
+\   '*': ['remove_trailing_lines', 'trim_whitespace'],
+\   'python': ['autopep8', 'black'],
+\   'javascript': ['prettier', 'eslint'],
+\   'typescript': ['prettier', 'tslint'],
+\   'css': ['prettier'],
+\   'html': ['prettier'],
+\   'go': ['gofmt', 'goimports'],
+\}
+let g:ale_sign_error = '✗'
+let g:ale_sign_warning = '⚠'
+let g:ale_lint_on_text_changed = 'never'  " Only lint when saving
+let g:ale_lint_on_save = 1
+let g:ale_fix_on_save = 0   " Off by default - flip to 1 once you've reviewed the fixers above and want auto-formatting on every save
+
+
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" => Session configuration (vim-session)
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+let g:session_autosave = 'yes'
+let g:session_autoload = 'no'
+
+
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" => IndentLine configuration
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+let g:indentLine_char = '┊'
+let g:indentLine_enabled = 1
+let g:indentLine_concealcursor = ''
+let g:indentLine_setColors = 1
+
+
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " => NERDTree key maps
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 noremap <leader>n :NERDTree<CR>
+noremap <leader>n0 :NERDTreeClose<CR>
+noremap <leader>n1 :NERDTreeFocus<CR>
 noremap <leader>nh :help NERDTree<CR>
+
+" Open NERDTree automatically when vim starts up if no files were specified
+autocmd StdinReadPre * let s:std_in=1
+autocmd VimEnter * if argc() == 0 && !exists("s:std_in") | NERDTree | endif
+" Close vim if the only window left open is NERDTree
+autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTree") && b:NERDTree.isTabTree()) | q | endif
+" Show hidden files by default
+let NERDTreeShowHidden=1
+" Ignore specific files
+let NERDTreeIgnore = ['\.pyc$', '__pycache__', '\.git$', '\.DS_Store']
 
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -560,6 +675,77 @@ noremap <leader>bv :set virtualedit=<cr>
 " ++>: draw arrows in both ends
 "
 "
+
+
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" => Session key maps
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" Capital S so these don't collide with the lowercase <leader>s* spell
+" mappings above.
+noremap <leader>So :OpenSession<cr>
+noremap <leader>Ss :SaveSession<cr>
+noremap <leader>Sc :CloseSession<cr>
+noremap <leader>Sd :DeleteSession<cr>
+
+" Show the currently active session (there's no dedicated vim-session
+" command for this - it's the plug-in's own function).
+nnoremap <leader>Sl :echo empty(xolox#session#find_current_session()) ? "No session open" : "Current session: " . xolox#session#find_current_session()<cr>
+
+
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" => Custom mappings
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" All mappings added while extending this vimrc live here, together,
+" instead of scattered across the topical sections above. Each one is
+" commented individually below.
+
+" Remove the Windows ^M - when the encodings gets messed up
+" (moved here from => Misc; renamed from <Leader>m to <leader>rc so it
+" doesn't collide with the <leader>m0 / <leader>m1 mouse toggles below)
+noremap <leader>rc mmHmt:%s/<C-V><cr>//ge<cr>'tzt'm
+
+" Disable mouse
+nnoremap <leader>m0 :set mouse=<CR>
+
+" Enable mouse
+nnoremap <leader>m1 :set mouse=a<CR>
+
+" Remove trailing whitespace from every line in the file
+nnoremap <leader>rs :%s/\s\+$//e<CR>
+
+" Toggle line wrap
+nnoremap <leader>rw :setlocal wrap!<CR>
+
+" Quick colorscheme cycling: <leader>cn (next) / <leader>cp (previous).
+" Only includes schemes with a single, unambiguous `:colorscheme` name -
+" deliberately excludes 'rafi/awesome-vim-colorschemes' (a multi-scheme
+" bundle) and 'arcticicestudio/nord-vim' (name collides with
+" 'nordtheme/vim', declared in => Vimplug configurations - see the
+" caution note there) to avoid ambiguity. Neovim-only schemes
+" (catppuccin, tokyonight, rose-pine) are excluded too, since they are
+" only installed `if has('nvim')`.
+let g:my_colorschemes = [
+      \ 'PaperColor', 'everforest', 'rigel', 'hydrangea', 'lucario',
+      \ 'nord', 'jellybeans', 'gruvbox', 'molokai', 'dracula', 'onedark'
+      \ ]
+let g:my_colorscheme_idx = index(g:my_colorschemes, 'nord')
+
+function! CycleColorscheme(step)
+  let g:my_colorscheme_idx = (g:my_colorscheme_idx + a:step + len(g:my_colorschemes)) % len(g:my_colorschemes)
+  let l:name = g:my_colorschemes[g:my_colorscheme_idx]
+  try
+    execute 'colorscheme ' . l:name
+    echo 'colorscheme: ' . l:name
+  catch
+    echo 'colorscheme not installed yet (run :PlugInstall): ' . l:name
+  endtry
+endfunction
+
+nnoremap <leader>cn :call CycleColorscheme(1)<CR>
+nnoremap <leader>cp :call CycleColorscheme(-1)<CR>
+
+" Quickly edit this vimrc/init.vim
+nnoremap <leader>ev :e $MYVIMRC<CR>
 
 
 " clear all the menus
@@ -586,6 +772,19 @@ call quickui#menu#install('&Edit', [
             \ [ '&Paste', 'p', 'help 2' ],
             \ ])
 
+" buffer, tab and window management (mirrors the <leader>b*/t* mappings)
+call quickui#menu#install('&Buffer', [
+            \ [ '&Next Buffer', 'bnext', 'Same as <leader>l' ],
+            \ [ '&Previous Buffer', 'bprevious', 'Same as <leader>h' ],
+            \ [ '&Close Buffer', 'Bclose | tabclose | normal! gT', 'Same as <leader>bd' ],
+            \ [ 'Close &All Buffers', 'bufdo bd', 'Same as <leader>ba' ],
+            \ [ '--', '' ],
+            \ [ '&New Tab', 'tabnew', 'Same as <leader>tn' ],
+            \ [ 'C&lose Tab', 'tabclose', 'Same as <leader>tc' ],
+            \ [ '&Next Tab', 'tabnext', 'Same as <leader>t<leader>' ],
+            \ [ '&Toggle Last Tab', 'exe "tabn ".g:lasttab', 'Same as <leader>tl' ],
+            \ ])
+
 " script inside %{...} will be evaluated and expanded in the string
 call quickui#menu#install("&Option", [
 			\ ['Set &Spell %{&spell? "Off":"On"}', 'set spell!'],
@@ -593,7 +792,30 @@ call quickui#menu#install("&Option", [
 			\ ['Set &Paste %{&paste? "Off":"On"}', 'set paste!'],
             \ ['Edit Configurations', 'tabe $MYVIMRC', 'Edit configuration' ],
             \ ['Set Mouse %{&mouse? "Off":"On"}', 'set mouse!'],
+            \ ['Set &Wrap %{&wrap? "Off":"On"}', 'setlocal wrap!', 'Same as <leader>rw'],
+            \ ['Toggle &NERDTree', 'NERDTreeToggle', 'Same as <leader>n'],
+            \ ['Remove &Trailing Whitespace', '%s/\s\+$//e', 'Same as <leader>rs'],
+            \ ['Toggle &ALE Linting', 'ALEToggle', 'Toggle async lint engine'],
 			\ ])
+
+" colorscheme cycling (mirrors the <leader>cn/<leader>cp mappings)
+call quickui#menu#install('&Colors', [
+            \ [ '&Next Colorscheme', 'call CycleColorscheme(1)', 'Same as <leader>cn' ],
+            \ [ '&Previous Colorscheme', 'call CycleColorscheme(-1)', 'Same as <leader>cp' ],
+            \ [ '--', '' ],
+            \ [ 'Toggle &Background %{&background == "dark" ? "Light" : "Dark"}', 'let &background = (&background == "dark" ? "light" : "dark")', '' ],
+            \ ])
+
+" session save/restore via vim-session (mirrors the <leader>S* mappings below)
+call quickui#menu#install('&Session', [
+            \ [ '&Open Session', 'OpenSession', 'Same as <leader>So' ],
+            \ [ '&Save Session', 'SaveSession', 'Same as <leader>Ss' ],
+            \ [ '&Close Session', 'CloseSession', 'Same as <leader>Sc' ],
+            \ [ '&Delete Session', 'DeleteSession', 'Same as <leader>Sd' ],
+            \ [ '--', '' ],
+            \ [ '&List Sessions', 'echo join(xolox#session#get_names(0), "\n")', 'Show all saved session names' ],
+            \ [ 'C&urrent Session', 'echo empty(xolox#session#find_current_session()) ? "No session open" : xolox#session#find_current_session()', 'Same as <leader>Sl' ],
+            \ ])
 
 " register HELP menu with weight 10000
 call quickui#menu#install('H&elp', [
@@ -608,6 +830,6 @@ call quickui#menu#install('H&elp', [
 " enable to display tips in the cmdline
 let g:quickui_show_tip = 1
 
-" hit space twice to open menu
-noremap <leader><space> :call quickui#menu#open()<cr>
+" open the quickui menu
+noremap <leader>mm :call quickui#menu#open()<cr>
 
