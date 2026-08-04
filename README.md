@@ -39,6 +39,13 @@ Leader key is `,`.
   (auto-close brackets/quotes), [indentLine](https://github.com/Yggdroot/indentLine)
   (visual indent guides), [vim-polyglot](https://github.com/sheerun/vim-polyglot)
   (broader language syntax/indent support, notably Perl).
+- **Autocompletion**: [coc.nvim](https://github.com/neoclide/coc.nvim) — completion,
+  hover docs (`K`), go-to-definition/type/implementation/references (`gd`/`gy`/`gi`/`gr`),
+  rename (`<leader>rn`). Extensions auto-install on first launch: `coc-pyright` (Python),
+  `coc-clangd` (C/C++), `coc-json`, `coc-sh` (shell), `coc-rust-analyzer` (Rust). Perl
+  uses a generic LSP entry pointing at `Perl::LanguageServer`
+  (`cpanm Perl::LanguageServer` — install separately). ALE stays the linter; coc's own
+  diagnostics are disabled to avoid duplicate gutter signs.
 - **Status line**: [lightline.vim](https://github.com/itchyny/lightline.vim) by
   default; a commented-out [vim-airline](https://github.com/vim-airline/vim-airline)
   alternative with switch instructions lives in the `=> Status line` section.
@@ -68,6 +75,7 @@ All mappings added on top of the original config live together in the
 | `<leader>m0` / `<leader>m1` | Mouse off / on |
 | `<leader>rs` | Strip trailing whitespace (any filetype, on demand) |
 | `<leader>rw` | Toggle line wrap |
+| `<leader>rn` | Rename symbol under cursor (coc.nvim) |
 | `<leader>cn` / `<leader>cp` | Cycle colorscheme next / previous |
 | `<leader>ev` | Quick-edit this vimrc/init.vim |
 
@@ -78,7 +86,13 @@ Make: 8 (tabs) — overriding the global 4-space default.
 
 ## Pending tasks
 
-1. Add a good autocompletion plugin with hints (e.g. a completion engine with
-   signature help/documentation popups) — nothing like this is installed yet.
+1. **Verify Perl LSP support.** The generic `languageserver` entry for Perl in
+   `g:coc_user_config` (pointing at `Perl::LanguageServer`) hasn't been tested —
+   installing CPAN modules wasn't possible in the sandbox this was written in.
+   Run `cpanm Perl::LanguageServer`, open a `.pl` file, and check `:CocInfo`.
+2. **Check coc's `<CR>` mapping against auto-pairs.** coc.nvim's recommended
+   insert-mode `<CR>` mapping (confirm completion) overrides whatever `<CR>`
+   mapping auto-pairs sets up for expanding a bracket pair onto its own line.
+   Not confirmed either way whether that behavior still works.
 
 

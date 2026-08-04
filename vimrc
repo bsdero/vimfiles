@@ -184,6 +184,7 @@ Plug 'tpope/vim-surround'              " Surround/change/delete quote & bracket 
 Plug 'jiangmiao/auto-pairs'            " Auto-close brackets/quotes/parens as you type
 Plug 'Yggdroot/indentLine'             " Visual indent-guide characters (configured in Step 8)
 Plug 'sheerun/vim-polyglot'            " Syntax/indent packs for many languages (notably improves Perl highlighting)
+Plug 'neoclide/coc.nvim', {'branch': 'release'}  " Autocompletion + LSP client (hover, signature help, go-to-definition) - see => Coc.nvim configuration
 
 " Color schemes
 Plug 'NLKNguyen/papercolor-theme' "PaperColor
@@ -626,6 +627,65 @@ let g:ale_fix_on_save = 0   " Off by default - flip to 1 once you've reviewed th
 
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" => Coc.nvim configuration (autocompletion / LSP: hover, signature
+" help, go-to-definition/references, rename)
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" ALE (above) stays the linter/fixer; coc's own diagnostics are turned
+" off below so the two don't both draw signs in the gutter - coc is
+" used here purely for completion/hover/goto, ALE stays the sole
+" linting source.
+let g:coc_global_extensions = [
+      \ 'coc-pyright',
+      \ 'coc-clangd',
+      \ 'coc-json',
+      \ 'coc-sh',
+      \ 'coc-rust-analyzer',
+      \ ]
+
+" Perl has no official coc marketplace extension, so it's wired up here
+" as a generic LSP entry instead, pointing at Perl::LanguageServer
+" (install separately: `cpanm Perl::LanguageServer`; requires a
+" system Perl with cpanm available). Untested in this repo - installing
+" CPAN modules isn't possible in this sandbox, so verify interactively
+" that it actually starts (:CocInfo after opening a .pl file) before
+" relying on it.
+let g:coc_user_config = {
+      \ 'diagnostic.enable': v:false,
+      \ 'languageserver': {
+      \   'perl': {
+      \     'command': 'perl',
+      \     'args': ['-MPerl::LanguageServer', '-e', 'Perl::LanguageServer::run'],
+      \     'filetypes': ['perl'],
+      \   },
+      \ },
+      \ }
+
+" <Tab>/<S-Tab> cycle the completion popup, <CR> confirms the selected
+" entry - coc.nvim's own recommended config. Caution: this <CR> mapping
+" is a blanket insert-mode override, so if auto-pairs' own <CR> handling
+" (expanding a bracket pair onto its own line) stops working, this is
+" why - the two haven't been tested together interactively here.
+function! CocCheckBackspace() abort
+  let l:col = col('.') - 1
+  return !l:col || getline('.')[l:col - 1] =~# '\s'
+endfunction
+
+inoremap <silent><expr> <Tab>
+      \ coc#pum#visible() ? coc#pum#next(1) :
+      \ CocCheckBackspace() ? "\<Tab>" :
+      \ coc#refresh()
+inoremap <expr><S-Tab> coc#pum#visible() ? coc#pum#prev(1) : "\<C-h>"
+inoremap <silent><expr> <CR> coc#pum#visible() ? coc#pum#confirm() : "\<CR>"
+
+" Hover docs, go-to-definition/type/implementation/references
+nnoremap <silent> K :call CocActionAsync('doHover')<CR>
+nnoremap <silent> gd <Plug>(coc-definition)
+nnoremap <silent> gy <Plug>(coc-type-definition)
+nnoremap <silent> gi <Plug>(coc-implementation)
+nnoremap <silent> gr <Plug>(coc-references)
+
+
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " => Session configuration (vim-session)
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 let g:session_autosave = 'yes'
@@ -716,6 +776,10 @@ nnoremap <leader>rs :%s/\s\+$//e<CR>
 " Toggle line wrap
 nnoremap <leader>rw :setlocal wrap!<CR>
 
+" Rename the symbol under the cursor (coc.nvim, requires the matching
+" language extension - see => Coc.nvim configuration)
+nnoremap <leader>rn <Plug>(coc-rename)
+
 " Quick colorscheme cycling: <leader>cn (next) / <leader>cp (previous).
 " Only includes schemes with a single, unambiguous `:colorscheme` name -
 " deliberately excludes 'rafi/awesome-vim-colorschemes' (a multi-scheme
@@ -796,6 +860,7 @@ call quickui#menu#install("&Option", [
             \ ['Toggle &NERDTree', 'NERDTreeToggle', 'Same as <leader>n'],
             \ ['Remove &Trailing Whitespace', '%s/\s\+$//e', 'Same as <leader>rs'],
             \ ['Toggle &ALE Linting', 'ALEToggle', 'Toggle async lint engine'],
+            \ ['Rename &Symbol (coc)', 'call CocActionAsync("rename")', 'Same as <leader>rn'],
 			\ ])
 
 " colorscheme cycling (mirrors the <leader>cn/<leader>cp mappings)
